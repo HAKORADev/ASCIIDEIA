@@ -679,49 +679,39 @@ On Windows, ASCIIDEIA calls `_enable_windows_ansi()` which uses `ctypes` to set 
 
 ```bash
 # Python dependencies
-pip install -r reqs-linux.txt
-# (contains: opencv-python, numpy, Pillow)
+pip install -r requirements.txt
+# (contains: opencv-python, numpy, Pillow, yt-dlp)
 
 # FFmpeg (required for video processing and MP4 rendering)
 sudo apt install ffmpeg
-
-# yt-dlp (optional, for YouTube/TikTok URLs)
-pip install yt-dlp
 ```
 
 ### Linux (Fedora/RHEL)
 
 ```bash
-pip install opencv-python numpy Pillow
+pip install -r requirements.txt
 sudo dnf install ffmpeg
-pip install yt-dlp
 ```
 
 ### macOS
 
 ```bash
 # Python dependencies
-pip install opencv-python numpy Pillow
+pip install -r requirements.txt
 
 # FFmpeg
 brew install ffmpeg
-
-# yt-dlp
-pip install yt-dlp
 ```
 
 ### Windows
 
 ```bash
 # Python dependencies
-pip install -r reqs-windows.txt
-# (contains: opencv-python, numpy, Pillow)
+pip install -r requirements.txt
+# (contains: opencv-python, numpy, Pillow, yt-dlp)
 
 # FFmpeg
 winget install FFmpeg
-
-# yt-dlp
-pip install yt-dlp
 ```
 
 ## FFmpeg Requirements
@@ -1137,8 +1127,8 @@ fi
 │  Defaults: color=colored  algo=chars                         │
 │  Shortcuts: i=img  v=vid  c=color  a=algo  r=render         │
 │                                                              │
-│  Dependencies: opencv-python, numpy, Pillow                  │
-│  FFmpeg: required for video  |  yt-dlp: optional for URLs   │
+│  Dependencies: opencv-python, numpy, Pillow, yt-dlp          │
+│  FFmpeg: required for video  |  yt-dlp: for URL downloads    │
 │                                                              │
 │  ⚠ NEVER run without render in agent/CI/Docker environments │
 └─────────────────────────────────────────────────────────────┘

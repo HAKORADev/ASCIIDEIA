@@ -73,11 +73,8 @@ python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # or: venv\Scripts\activate  # Windows
 
-# Install dependencies (Linux)
-pip install -r reqs-linux.txt
-
-# Install dependencies (Windows)
-pip install -r reqs-windows.txt
+# Install dependencies
+pip install -r requirements.txt
 ```
 
 **Package explanations:**
@@ -87,8 +84,7 @@ pip install -r reqs-windows.txt
 | `opencv-python` | Image/video loading, frame extraction, resizing |
 | `numpy` | Array operations for brightness mapping and character selection |
 | `Pillow` | PNG rendering, font rendering for image export |
-
-> **Note:** `reqs-linux.txt` and `reqs-windows.txt` currently have the same contents. Both install `opencv-python>=4.5.0`, `numpy>=1.21.0`, and `Pillow>=9.0.0`.
+| `yt-dlp` | YouTube and TikTok URL download support |
 
 ### Step 2: Install FFmpeg (if needed)
 
@@ -108,12 +104,9 @@ sudo apt install ffmpeg       # Debian/Ubuntu
 sudo pacman -S ffmpeg         # Arch
 ```
 
-### Step 3: Install Optional Dependencies
+### Step 3: Verify Optional Components
 
 ```bash
-# For YouTube/TikTok URL support
-pip install yt-dlp
-
 # ffplay comes bundled with FFmpeg (for audio during interactive playback)
 # Not needed for render mode
 ```
@@ -479,7 +472,7 @@ python -c "import cv2; import numpy; from PIL import Image; print('OK')"
 # Check FFmpeg availability
 ffmpeg -version && echo "FFmpeg OK" || echo "FFmpeg MISSING"
 
-# Check yt-dlp availability (optional, for URLs)
+# Check yt-dlp availability
 python -c "import yt_dlp; print('yt-dlp OK')" || echo "yt-dlp not installed"
 
 # Check if a video has audio
@@ -597,8 +590,7 @@ python asciideia.py image "photo.png" render "./output/"
 
 **Solution:**
 ```bash
-pip install -r reqs-linux.txt    # Linux
-pip install -r reqs-windows.txt  # Windows
+pip install -r requirements.txt
 ```
 
 ### Slow Video Rendering
@@ -632,7 +624,7 @@ python asciideia.py video "https://youtu.be/..." render "./output/"
 
 1. **Always use the `render` flag** in headless/automated environments. Without it, ASCIIDEIA enters an interactive terminal player that will hang indefinitely.
 2. **Always check FFmpeg** before processing videos — it is required for video metadata reading, audio extraction, and MP4 rendering.
-3. **yt-dlp is optional** — only needed when the user provides a YouTube or TikTok URL instead of a local file path.
+3. **yt-dlp is included in requirements.txt** — needed when the user provides a YouTube or TikTok URL instead of a local file path.
 4. **ffplay is optional** — only used for audio during interactive playback. Not needed for `render` mode.
 5. **No GPU required** — ASCIIDEIA is entirely CPU-based.
 6. **Output directory is auto-created** — the path specified in `render` will be created if it doesn't exist.
@@ -672,7 +664,7 @@ When helping a user convert images/videos to ASCII art:
 cd /workspace
 git clone https://github.com/HAKORADev/ASCIIDEIA.git
 cd ASCIIDEIA
-pip install -r reqs-linux.txt
+pip install -r requirements.txt
 
 # Convert image with defaults (colored + chars)
 python asciideia.py image "/photos/cat.png" render "./results/"
@@ -687,7 +679,7 @@ python asciideia.py image "/photos/cat.png" render "./results/"
 command -v ffmpeg || (sudo apt update && sudo apt install -y ffmpeg)
 
 # Install dependencies
-pip install -r reqs-linux.txt
+pip install -r requirements.txt
 
 # Convert video to black & white ASCII art MP4
 python asciideia.py video "/videos/demo.mp4" color bw algo chars render "./output/"
@@ -698,9 +690,8 @@ python asciideia.py video "/videos/demo.mp4" color bw algo chars render "./outpu
 ### Workflow 3: YouTube Video to Colored Braille Dots MP4
 
 ```bash
-# Install all dependencies including yt-dlp
-pip install -r reqs-linux.txt
-pip install yt-dlp
+# Install all dependencies
+pip install -r requirements.txt
 
 # Download and convert a YouTube video
 python asciideia.py video "https://youtu.be/dQw4w9WgXcQ" color colored algo dots render "./ascii_output/"
@@ -712,7 +703,7 @@ python asciideia.py video "https://youtu.be/dQw4w9WgXcQ" color colored algo dots
 
 ```bash
 cd ASCIIDEIA
-pip install -r reqs-linux.txt
+pip install -r requirements.txt
 mkdir -p ./batch_output
 
 # Process each image with a different style
@@ -731,8 +722,7 @@ python asciideia.py image "/photos/sunset.bmp" color gray algo dots render "./ba
 ```bash
 # Full automated pipeline
 cd /workspace/ASCIIDEIA
-pip install -r reqs-linux.txt
-pip install yt-dlp
+pip install -r requirements.txt
 
 # Define output directory
 OUTPUT_DIR="/workspace/deliverables"
@@ -752,7 +742,7 @@ ls -la "$OUTPUT_DIR"/ASCIIDEIA_*
 
 ```bash
 cd ASCIIDEIA
-pip install -r reqs-linux.txt
+pip install -r requirements.txt
 mkdir -p ./comparison
 
 # Same image, three algorithms

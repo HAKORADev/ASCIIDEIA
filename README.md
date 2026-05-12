@@ -62,7 +62,7 @@ Paste a YouTube or TikTok URL instead of a local file path. ASCIIDEIA uses yt-dl
 
 ```bash
 git clone https://github.com/HAKORADev/ASCIIDEIA.git && cd ASCIIDEIA
-pip install -r reqs-linux.txt   # or reqs-windows.txt
+pip install -r requirements.txt
 
 # Interactive mode
 python asciideia.py
@@ -188,7 +188,7 @@ YouTube (`youtube.com`, `youtu.be`) and TikTok (`tiktok.com`, `vm.tiktok.com`) �
 |-----------|-------------|
 | Python | 3.8+ |
 | FFmpeg | Required for video processing and MP4 rendering |
-| yt-dlp | Optional — for YouTube/TikTok URL support |
+| yt-dlp | For YouTube/TikTok URL support (included in requirements.txt) |
 | ffplay | Optional — for audio playback during video playback |
 | GPU | Not required — runs entirely on CPU |
 
@@ -203,12 +203,6 @@ brew install ffmpeg
 
 # Linux
 sudo apt install ffmpeg
-```
-
-### Install yt-dlp (optional)
-
-```bash
-pip install yt-dlp
 ```
 
 ---
