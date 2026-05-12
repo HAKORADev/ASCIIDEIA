@@ -28,21 +28,42 @@ ASCIIDEIA converts images and videos into ASCII art and plays them directly in y
 
 ## Showcase
 
-<p align="center">
-  <img src="assets/showcase-colored-dots-2.png" alt="Colored Dots" width="45%"/>
-  &nbsp;
-  <img src="assets/showcase-colored-chars.png" alt="Colored Chars" width="45%"/>
-</p>
+<table>
+  <tr>
+    <td align="center"><b>Original</b></td>
+    <td align="center"><b>Colored + Dots</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/original-colored-dots-1.jpg" alt="Original" width="400"/></td>
+    <td><img src="assets/showcase-colored-dots-1.png" alt="Colored Dots" width="400"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Original</b></td>
+    <td align="center"><b>Colored + Dots</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/original-colored-dots-2.webp" alt="Original" width="400"/></td>
+    <td><img src="assets/showcase-colored-dots-2.png" alt="Colored Dots" width="400"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Original</b></td>
+    <td align="center"><b>Gray + Chars</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/original-gray-chars.jpeg" alt="Original" width="400"/></td>
+    <td><img src="assets/showcase-gray-chars.png" alt="Gray Chars" width="400"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Original</b></td>
+    <td align="center"><b>Colored + Chars</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/original-colored-chars.jpeg" alt="Original" width="400"/></td>
+    <td><img src="assets/showcase-colored-chars.png" alt="Colored Chars" width="400"/></td>
+  </tr>
+</table>
 
-<p align="center">
-  <img src="assets/showcase-gray-chars.png" alt="Gray Chars" width="45%"/>
-  &nbsp;
-  <img src="assets/showcase-colored-dots-1.png" alt="Colored Dots" width="45%"/>
-</p>
-
-<p align="center">
-  <sup>Rendered PNG outputs (downscaled for preview). Top-left: colored + dots. Top-right: colored + chars. Bottom-left: gray + chars. Bottom-right: colored + dots (alternative source).</sup>
-</p>
+<p align="center"><sup>Rendered PNG outputs are downscaled for preview (30× smaller). Original detail is preserved in full renders.</sup></p>
 
 ---
 
