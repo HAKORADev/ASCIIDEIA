@@ -1267,7 +1267,7 @@ def render_mp4(video_path, media_width, color_mode, algorithm, fps, audio_path, 
     render_h, render_w = sample_img.shape[:2]
 
     cmd = [
-        'ffmpeg', '-y',
+        'ffmpeg', '-y', '-loglevel', 'error',
         '-f', 'rawvideo', '-pixel_format', 'rgb24',
         '-video_size', f'{render_w}x{render_h}',
         '-framerate', str(fps),
@@ -1285,11 +1285,26 @@ def render_mp4(video_path, media_width, color_mode, algorithm, fps, audio_path, 
 
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    _stderr_chunks = []
+    def _drain_stderr(pipe):
+        try:
+            while True:
+                chunk = pipe.read(4096)
+                if not chunk:
+                    break
+                _stderr_chunks.append(chunk)
+        except Exception:
+            pass
+
+    stderr_thread = threading.Thread(target=_drain_stderr, args=(proc.stderr,), daemon=True)
+    stderr_thread.start()
+
     try:
         proc.stdin.write(sample_img.tobytes())
     except BrokenPipeError:
         cap.release()
         proc.stdin.close()
+        stderr_thread.join(timeout=5)
         proc.wait()
         print_error("ffmpeg pipe broke on first frame.")
         return None
@@ -1320,17 +1335,22 @@ def render_mp4(video_path, media_width, color_mode, algorithm, fps, audio_path, 
         print(f"\r  Rendering... 100% ({frame_count}/{total})")
     cap.release()
 
+    print("  Compiling video...", flush=True)
+
     try:
         proc.stdin.close()
     except BrokenPipeError:
         pass
+
+    stderr_thread.join()
     proc.wait()
 
+    stderr_data = b"".join(_stderr_chunks)
     if proc.returncode == 0:
         return output_path
     else:
         try:
-            stderr_output = proc.stderr.read().decode()[-300:]
+            stderr_output = stderr_data.decode()[-300:]
         except Exception:
             stderr_output = "unknown error"
         print_error(f"ffmpeg encoding failed: {stderr_output}")
@@ -1485,8 +1505,7 @@ def run_interactive():
 
         if ask_yes_no("Render as standard media?", 'n'):
             _do_render(path, is_video, original_name)
-
-        if is_video:
+        elif is_video:
             play_ascii_video(path)
         else:
             play_ascii_image(path)
