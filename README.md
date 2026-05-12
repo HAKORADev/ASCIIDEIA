@@ -26,6 +26,26 @@ ASCIIDEIA converts images and videos into ASCII art and plays them directly in y
 
 ---
 
+## Showcase
+
+<p align="center">
+  <img src="assets/showcase-colored-dots-2.png" alt="Colored Dots" width="45%"/>
+  &nbsp;
+  <img src="assets/showcase-colored-chars.png" alt="Colored Chars" width="45%"/>
+</p>
+
+<p align="center">
+  <img src="assets/showcase-gray-chars.png" alt="Gray Chars" width="45%"/>
+  &nbsp;
+  <img src="assets/showcase-colored-dots-1.png" alt="Colored Dots" width="45%"/>
+</p>
+
+<p align="center">
+  <sup>Rendered PNG outputs (downscaled for preview). Top-left: colored + dots. Top-right: colored + chars. Bottom-left: gray + chars. Bottom-right: colored + dots (alternative source).</sup>
+</p>
+
+---
+
 ## Features
 
 - **3 Color Modes** — Full 24-bit color, black & white, or grayscale. Switch live with a single keypress during playback.
