@@ -385,8 +385,11 @@ The mode and path are positional arguments — they must appear in order. The fl
 | `color` | `colored`, `bw`, `gray` | `colored` | Color mode for rendering |
 | `algo` | `chars`, `blocks`, `dots` | `chars` | Algorithm for rendering |
 | `render` | `"path"` | (none) | Render as PNG/MP4 to the specified directory and exit |
+| `render_mode` | `modern`, `retro` | `modern` | Render resolution — Modern for full detail, Retro for visible characters |
 
 When the `render` flag is not provided, ASCIIDEIA enters the interactive playback mode (image viewer or video player) with the specified color mode and algorithm as defaults. When the `render` flag is provided with a directory path, ASCIIDEIA renders the output as a PNG (images) or MP4 (videos) file in that directory and exits without launching the interactive player.
+
+The `render_mode` flag controls the output resolution. Modern mode renders at the full source resolution where characters are too small to see individually, producing a filter-like effect. Retro mode renders at approximately 140 characters wide with a larger font, making individual characters clearly visible for an authentic ASCII art feel.
 
 ### Shortcuts and Aliases
 
@@ -437,11 +440,26 @@ python asciideia.py vid "movie.mp4" a braille c grayscale r "/tmp/ascii/"
 
 The render pipeline converts ASCII art into standard media files that can be opened by any image viewer or video player. This is the bridge between the terminal-native art that ASCIIDEIA produces and the standard file formats that the rest of the world expects.
 
+### Render Modes
+
+ASCIIDEIA offers two render modes that control the character grid resolution and visual feel of the output:
+
+| Mode | Flag | Character Grid | Font Size | Visual Feel |
+|------|------|----------------|-----------|-------------|
+| **Modern** | `render_mode modern` | Full source resolution (e.g., 4000 chars wide) | 12pt | Filter-like detail, characters too tiny to see individually |
+| **Retro** | `render_mode retro` | ~140 characters wide | 18pt | Authentic ASCII art — individual characters are clearly visible |
+
+**Modern mode** renders the ASCII art at the full pixel width of the source image. A 4000-pixel-wide photograph produces a 4000-character-wide ASCII rendering, where each character occupies only 7×14 pixels. The result looks like a color filter applied to the original image rather than recognizable ASCII art. This mode is best for high-quality exports where the viewer wants photographic detail preserved.
+
+**Retro mode** constrains the ASCII art to approximately 140 characters wide (with height computed from the source aspect ratio). Each character is rendered at a larger 10×20 pixel cell with an 18pt font, making individual characters clearly visible. The result feels like authentic ASCII art — you can see the characters, dots, or blocks that compose the image. This mode is best for sharing ASCII art where the character-based nature of the medium is part of the appeal.
+
+The choice between Modern and Retro is purely about visual style, not quality. Both modes use the same rendering algorithms and color modes. Modern produces more detailed output at the cost of losing the ASCII character aesthetic. Retro produces output that looks unmistakably like ASCII art at the cost of fine detail.
+
 ### PNG Pipeline
 
 The PNG rendering pipeline converts a static ASCII art image into a PNG file. The pipeline works as follows:
 
-1. **Generate ASCII art** — The source image is converted to ASCII art using the specified color mode and algorithm at the full resolution of the source image (not the terminal-adapted size). This means a 4000-pixel-wide photograph will produce a 4000-character-wide ASCII rendering, regardless of terminal size.
+1. **Generate ASCII art** — The source image is converted to ASCII art using the specified color mode and algorithm. In Modern mode, the width equals the source image pixel width. In Retro mode, the width is capped at approximately 140 characters.
 
 2. **Parse ANSI sequences** — If the color mode is colored or gray, the ANSI escape sequences in the ASCII art are parsed into per-character RGB tuples. The `parse_ansi_colored_line` function walks each line character by character, tracking the current foreground color and building a list of `(character, R, G, B)` tuples. For BW mode, lines are stored as plain strings with a default white color.
 

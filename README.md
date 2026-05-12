@@ -72,7 +72,7 @@ ASCIIDEIA converts images and videos into ASCII art and plays them directly in y
 - **3 Color Modes** — Full 24-bit color, black & white, or grayscale. Switch live with a single keypress during playback.
 - **3 Rendering Algorithms** — Classic characters, Unicode block elements (░▒▓█), or Braille dots (⠁⠃⠉⣿). Each produces a distinct visual style.
 - **Live Terminal Playback** — Watch ASCII videos play in real-time with pause, seek, speed control, and sound. Images get an interactive viewer with mode switching.
-- **Render to Standard Media** — Export any image as PNG or any video as MP4 with the `render` flag. Output includes audio when the source has it.
+- **Render to Standard Media** — Export any image as PNG or any video as MP4 with the `render` flag. Output includes audio when the source has it. Choose **Modern** for full-resolution detail or **Retro** for a small character grid where individual characters are visible.
 - **YouTube & TikTok Support** — Paste a URL directly. ASCIIDEIA downloads the video and converts it, no manual steps.
 - **Cross-Platform** — Same tool, same controls, same output on Windows, Linux, and macOS. Platform-specific terminal handling is built in.
 - **Oneline CLI Mode** — Skip the interactive menus. Run a single command with all parameters: `asciideia.py video "clip.mp4" algo dots render "./out/"`.
@@ -92,6 +92,13 @@ Feed any video — MP4, AVI, MKV, MOV, WebM, GIF, and more — and ASCIIDEIA pla
 ### Render to Standard Media
 
 Add the `render` flag to any command and ASCIIDEIA bakes the ASCII art into a proper PNG (images) or MP4 (videos) file. No terminal needed for this — perfect for batch processing and headless environments. Output files are named with the color mode and algorithm baked in: `ASCIIDEIA_image_photo_colored_blocks_1778603647.png`.
+
+Two render modes are available:
+
+| Mode | Flag | Description |
+|------|------|-------------|
+| **Modern** | `render_mode modern` | Full source resolution. Characters are tiny, output looks like a filter on the original image. Best for high-quality exports. |
+| **Retro** | `render_mode retro` | ~140 characters wide. Individual characters are clearly visible in the output. Gives the authentic ASCII art feel. |
 
 ### Download and Convert from URLs
 
@@ -187,9 +194,10 @@ python asciideia.py <mode> <path> [flags]
 Modes:   image | i | img       Video:  video | v | vid
 
 Flags:
-  color   colored|bw|gray     Color mode (default: colored)
-  algo    chars|blocks|dots   Algorithm (default: chars)
-  render  "path"              Render as PNG/MP4 and exit
+  color         colored|bw|gray     Color mode (default: colored)
+  algo          chars|blocks|dots   Algorithm (default: chars)
+  render        "path"              Render as PNG/MP4 and exit
+  render_mode   modern|retro        Render resolution (default: modern)
 ```
 
 ### Examples
@@ -203,6 +211,9 @@ python asciideia.py video "demo.mp4" color bw algo blocks render "./out/"
 
 # Quick render — colored chars (defaults)
 python asciideia.py image "photo.jpg" render "./output/"
+
+# Retro render — visible ASCII characters in output
+python asciideia.py image "photo.jpg" render "./output/" render_mode retro
 
 # From YouTube URL
 python asciideia.py video "https://youtu.be/dQw4w9WgXcQ" color gray

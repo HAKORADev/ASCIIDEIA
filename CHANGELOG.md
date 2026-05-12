@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **3 Color Modes** — Colored (24-bit RGB per character), BW (pure black & white), and Gray (grayscale shading). Switchable live during playback with keys 1/2/3.
 - **3 Rendering Algorithms** — Chars (standard ASCII ramp with 67+ brightness levels), Blocks (Unicode block elements ░▒▓█ with 5 levels), and Dots (Braille dot patterns ⠁⠃⠉⣿ with 12 levels). Switchable live during playback with keys 4/5/6.
+- **2 Render Modes** — Modern (full source resolution, filter-like detail) and Retro (~140 characters wide, visible individual characters for authentic ASCII art feel). Controlled via `render_mode` flag or interactive menu when rendering.
+- **Dynamic Terminal Color Depth Detection** — Automatically detects terminal color support (24-bit true-color, 256-color, 16-color, or none) and uses the highest supported depth. Non-TTY environments always use 24-bit for best render quality.
 - **Interactive Terminal Playback** — Full TUI with alternate screen buffer, hidden cursor, and real-time rendering. Images display in an interactive viewer with live mode switching. Videos play with a progress bar, time display, and speed indicator.
 - **Video Playback Controls** — Pause/Resume (P), Seek ±5 seconds (J/L), Frame stepping when paused (J/L), Speed control from 0.25x to 2.00x in 0.25 increments (I/K), Sound toggle (S), Replay from start (R), Quit (Q/Esc).
 - **Image Viewer Controls** — Color mode switching (1/2/3), Algorithm switching (4/5/6), Quit (Q/Esc/Enter).

@@ -53,6 +53,14 @@ COLOR_GRAY = 'gray'
 COLOR_MODES = [COLOR_COLORED, COLOR_BW, COLOR_GRAY]
 ALGORITHM_MODES = [ALGO_CHARS, ALGO_BLOCKS, ALGO_DOTS]
 
+RENDER_MODERN = 'modern'
+RENDER_RETRO = 'retro'
+RENDER_MODES = [RENDER_MODERN, RENDER_RETRO]
+
+RENDER_MODE_LABELS = {RENDER_MODERN: 'Modern', RENDER_RETRO: 'Retro'}
+
+RETRO_CHAR_WIDTH = 140
+
 SPEED_STEPS = [0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00]
 SPEED_DEFAULT_IDX = 3
 
@@ -1183,9 +1191,14 @@ def find_monospace_font():
     return None
 
 
-def ascii_to_rgb_image(ascii_frame, has_ansi, char_w=7, char_h=14, font_size=12):
+def ascii_to_rgb_image(ascii_frame, has_ansi, char_w=7, char_h=14, font_size=12, render_mode=RENDER_MODERN):
     lines = ascii_frame.split('\n')
     font_path = find_monospace_font()
+
+    if render_mode == RENDER_RETRO:
+        char_w = 10
+        char_h = 20
+        font_size = 18
 
     max_len = 0
     parsed_lines = []
@@ -1228,14 +1241,14 @@ def ascii_to_rgb_image(ascii_frame, has_ansi, char_w=7, char_h=14, font_size=12)
     return np.array(img)
 
 
-def render_png(ascii_frame, output_path, has_ansi):
-    img = ascii_to_rgb_image(ascii_frame, has_ansi)
+def render_png(ascii_frame, output_path, has_ansi, render_mode=RENDER_MODERN):
+    img = ascii_to_rgb_image(ascii_frame, has_ansi, render_mode=render_mode)
     pil_img = Image.fromarray(img)
     pil_img.save(output_path)
     return output_path
 
 
-def render_mp4(video_path, media_width, color_mode, algorithm, fps, audio_path, output_path):
+def render_mp4(video_path, media_width, color_mode, algorithm, fps, audio_path, output_path, render_mode=RENDER_MODERN):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print_error("Cannot open video for rendering.")
@@ -1250,7 +1263,7 @@ def render_mp4(video_path, media_width, color_mode, algorithm, fps, audio_path, 
         return None
 
     first_ascii = frame_to_ascii(first_frame, media_width, color_mode, algorithm)
-    sample_img = ascii_to_rgb_image(first_ascii, has_ansi)
+    sample_img = ascii_to_rgb_image(first_ascii, has_ansi, render_mode=render_mode)
     render_h, render_w = sample_img.shape[:2]
 
     cmd = [
@@ -1290,7 +1303,7 @@ def render_mp4(video_path, media_width, color_mode, algorithm, fps, audio_path, 
         if not ret:
             break
         ascii_art = frame_to_ascii(frame, media_width, color_mode, algorithm)
-        rgb = ascii_to_rgb_image(ascii_art, has_ansi)
+        rgb = ascii_to_rgb_image(ascii_art, has_ansi, render_mode=render_mode)
         if rgb.shape[0] != render_h or rgb.shape[1] != render_w:
             pil_img = Image.fromarray(rgb).resize((render_w, render_h))
             rgb = np.array(pil_img)
@@ -1491,7 +1504,25 @@ def _do_render(path, is_video, original_name):
     choice = ask_choice("Render algorithm?", ["Characters", "Blocks", "Dots"], default=1)
     algorithm = ALGORITHM_MODES[choice - 1]
 
+    choice = ask_choice("Render mode?", ["Modern — full resolution, filter-like detail", "Retro — small character grid, visible ASCII characters"], default=1)
+    render_mode = RENDER_MODES[choice - 1]
+
     has_ansi = color_mode in (COLOR_COLORED, COLOR_GRAY)
+
+    if render_mode == RENDER_RETRO:
+        media_width = RETRO_CHAR_WIDTH
+    elif is_video:
+        meta = get_video_metadata(path)
+        if not meta:
+            print_error("Cannot read video metadata for rendering.")
+            return
+        media_width = meta['width']
+    else:
+        img_meta = get_image_metadata(path)
+        if not img_meta:
+            print_error("Cannot read image metadata for rendering.")
+            return
+        media_width = img_meta['width']
 
     if is_video:
         meta = get_video_metadata(path)
@@ -1500,7 +1531,6 @@ def _do_render(path, is_video, original_name):
             return
         fps = meta['fps']
         has_audio = has_audio_track(path)
-        media_width = meta['width']
 
         fname = generate_output_name('video', original_name, color_mode, algorithm, 'mp4')
         out_path = str(RESULTS_DIR / fname)
@@ -1512,25 +1542,19 @@ def _do_render(path, is_video, original_name):
                 audio_render_path = None
 
         print_step("Rendering video... This may take a while.")
-        result = render_mp4(path, media_width, color_mode, algorithm, fps, audio_render_path, out_path)
+        result = render_mp4(path, media_width, color_mode, algorithm, fps, audio_render_path, out_path, render_mode)
         if result:
             print_info(f"Saved to {out_path}")
             _open_file(out_path)
         else:
             print_error("Video rendering failed.")
     else:
-        img_meta = get_image_metadata(path)
-        if not img_meta:
-            print_error("Cannot read image metadata for rendering.")
-            return
-        media_width = img_meta['width']
-
         fname = generate_output_name('image', original_name, color_mode, algorithm, 'png')
         out_path = str(RESULTS_DIR / fname)
 
         ascii_art = image_to_ascii(path, media_width, color_mode, algorithm)
         if ascii_art:
-            render_png(ascii_art, out_path, has_ansi)
+            render_png(ascii_art, out_path, has_ansi, render_mode)
             print_info(f"Saved to {out_path}")
             _open_file(out_path)
 
@@ -1557,6 +1581,7 @@ def parse_oneline(args):
         'color': 'colored',
         'algo': 'chars',
         'render': None,
+        'render_mode': 'modern',
     }
 
     i = 0
@@ -1607,6 +1632,16 @@ def parse_oneline(args):
         elif flag in ('render', 'r') and i + 1 < len(args):
             i += 1
             config['render'] = args[i]
+        elif flag in ('render_mode', 'rm', 'rendition') and i + 1 < len(args):
+            i += 1
+            val = args[i].lower()
+            if val in ('modern', 'm', '1'):
+                config['render_mode'] = 'modern'
+            elif val in ('retro', 'r', '2'):
+                config['render_mode'] = 'retro'
+            else:
+                print_warn(f"Unknown render mode '{val}', using modern.")
+                config['render_mode'] = 'modern'
         else:
             print_warn(f"Unknown flag: {flag}")
         i += 1
@@ -1676,10 +1711,15 @@ def run_oneline(config):
     display_width = compute_display_width_for_terminal(src_w, src_h)
     print_info(f"Terminal: {display_width}x{compute_ascii_height(display_width, src_w, src_h)} chars")
 
+    render_mode = config.get('render_mode', 'modern')
+    if render_mode not in RENDER_MODES:
+        render_mode = RENDER_MODERN
+
     if config['render']:
         render_folder = validate_export_path(config['render'])
         if render_folder:
             has_ansi = color_mode in (COLOR_COLORED, COLOR_GRAY)
+            media_width = RETRO_CHAR_WIDTH if render_mode == RENDER_RETRO else src_w
             if is_video:
                 fname = generate_output_name('video', original_name, color_mode, algorithm, 'mp4')
                 out_path = os.path.join(render_folder, fname)
@@ -1688,15 +1728,15 @@ def run_oneline(config):
                     audio_render_path = str(TEMP_DIR / f"audio_render_{int(time.time())}.wav")
                     extract_audio(path, audio_render_path)
                 print_step("Rendering video...")
-                result = render_mp4(path, src_w, color_mode, algorithm, fps, audio_render_path, out_path)
+                result = render_mp4(path, media_width, color_mode, algorithm, fps, audio_render_path, out_path, render_mode)
                 if result:
                     print_info(f"Saved to {out_path}")
             else:
                 fname = generate_output_name('image', original_name, color_mode, algorithm, 'png')
                 out_path = os.path.join(render_folder, fname)
-                ascii_art = image_to_ascii(path, src_w, color_mode, algorithm)
+                ascii_art = image_to_ascii(path, media_width, color_mode, algorithm)
                 if ascii_art:
-                    render_png(ascii_art, out_path, has_ansi)
+                    render_png(ascii_art, out_path, has_ansi, render_mode)
                     print_info(f"Saved to {out_path}")
     elif is_video:
         play_ascii_video(path, color_mode, algorithm)
@@ -1716,9 +1756,10 @@ def show_help():
     print(f"    python asciideia.py video \"clip.mp4\" render \"out/\"     {C_GRAY}# Render to file{RESET}")
     print()
     print(f"  {C_CYAN}Flags:{RESET}")
-    print(f"    {BOLD}color{RESET}  colored|bw|gray    Color mode (default: colored)")
-    print(f"    {BOLD}algo{RESET}   chars|blocks|dots  Algorithm (default: chars)")
-    print(f"    {BOLD}render{RESET} \"path\"             Render as PNG/MP4")
+    print(f"    {BOLD}color{RESET}        colored|bw|gray       Color mode (default: colored)")
+    print(f"    {BOLD}algo{RESET}         chars|blocks|dots      Algorithm (default: chars)")
+    print(f"    {BOLD}render{RESET}       \"path\"                 Render as PNG/MP4")
+    print(f"    {BOLD}render_mode{RESET}  modern|retro            Render resolution (default: modern)")
     print()
     print(f"  {C_CYAN}In-terminal controls:{RESET}")
     print(f"    {BOLD}1/2/3{RESET}  Colored / BW / Grayscale")
@@ -1732,6 +1773,8 @@ def show_help():
     print()
     print(f"  {C_CYAN}Render as standard media:{RESET}")
     print(f"    Produces a baked PNG or MP4 file with the chosen color & algorithm.")
+    print(f"    {BOLD}Modern{RESET} renders at full source resolution (filter-like detail).")
+    print(f"    {BOLD}Retro{RESET} renders at ~140 chars wide (visible ASCII characters).")
     print(f"    In interactive mode, color and algorithm questions are asked when rendering.")
     print(f"    In oneline mode, use the {BOLD}color{RESET} and {BOLD}algo{RESET} flags.")
     print(f"    If not specified, defaults to colored characters.")

@@ -166,7 +166,7 @@ VIDEO FILE
 ## Command Format
 
 ```
-python asciideia.py <mode> <path> [color <val>] [algo <val>] [render "path"]
+python asciideia.py <mode> <path> [color <val>] [algo <val>] [render "path"] [render_mode <mode>]
 ```
 
 ## Image Commands — All 9 Color × Algorithm Combinations
@@ -358,6 +358,15 @@ python asciideia.py video "https://youtu.be/dQw4w9WgXcQ" color gray algo dots
 | `render` | `r` | `"path/to/dir/"` | Render to PNG/MP4 in specified directory, then EXIT cleanly |
 
 **Default**: Not set (launches interactive TUI)
+
+### Render Mode Flag
+
+| Flag | Short | Value | Behavior |
+|------|-------|-------|----------|
+| `render_mode` | `rm`, `rendition` | `modern` | Full source resolution — characters are tiny, output looks like a filter. Best for high-quality exports. |
+| `render_mode` | `rm`, `rendition` | `retro` | ~140 characters wide — individual characters are clearly visible. Gives the authentic ASCII art feel. |
+
+**Default**: `modern`
 
 ---
 

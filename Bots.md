@@ -215,7 +215,7 @@ Help the user choose the right settings:
 ### Syntax
 
 ```bash
-python asciideia.py <mode> <path> [color <mode>] [algo <type>] [render "path"]
+python asciideia.py <mode> <path> [color <mode>] [algo <type>] [render "path"] [render_mode <mode>]
 ```
 
 ### Parameters
@@ -227,6 +227,7 @@ python asciideia.py <mode> <path> [color <mode>] [algo <type>] [render "path"]
 | `color <mode>` | Color mode: `colored`, `bw`, or `gray` (shortcut: `c`) | No | `colored` |
 | `algo <type>` | Algorithm: `chars`, `blocks`, or `dots` (shortcut: `a`; `dots` also accepts `braille`/`d`) | No | `chars` |
 | `render "path"` | Output directory for rendered file. Shortcut: `r`. When specified, renders and EXITS (no TUI). | No | None (launches interactive player) |
+| `render_mode <mode>` | Render resolution: `modern` (full source resolution) or `retro` (~140 chars, visible characters). Shortcut: `rm`. | No | `modern` |
 
 ### Mode Options
 
@@ -243,6 +244,25 @@ python asciideia.py <mode> <path> [color <mode>] [algo <type>] [render "path"]
 | No `render` flag | Launches **interactive terminal player** (TUI) with keyboard controls | ❌ No — requires TTY, will hang headless |
 
 **⚠️ AI Agents: Always use the `render` flag.** Without it, ASCIIDEIA enters an interactive loop waiting for keyboard input, which will hang in automated environments.
+
+### Render Mode
+
+| Mode | Flag | Description | When to Use |
+|------|------|-------------|-------------|
+| **Modern** | `render_mode modern` | Full source resolution rendering. Characters are tiny — output looks like a color filter on the original. | High-quality exports, printing, sharing as normal-looking media |
+| **Retro** | `render_mode retro` | ~140 characters wide rendering. Individual characters are clearly visible in the output. Feels like authentic ASCII art. | Classic ASCII art aesthetic, terminals, posters, sharing as recognizable ASCII |
+
+**Examples:**
+```bash
+# Modern — full resolution (default)
+python asciideia.py image "photo.png" render "./out/"
+
+# Retro — visible characters
+python asciideia.py image "photo.png" render "./out/" render_mode retro
+
+# Retro with shortcuts
+python asciideia.py i "photo.png" r "./out/" rm retro
+```
 
 ### URL Support
 
