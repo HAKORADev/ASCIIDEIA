@@ -6,10 +6,17 @@ import re
 import shutil
 import subprocess
 import sys
-import termios
 import time
-import tty
 import threading
+
+_IS_WINDOWS = sys.platform == 'win32'
+
+if _IS_WINDOWS:
+    import msvcrt
+    import ctypes
+else:
+    import termios
+    import tty
 
 from collections import deque
 from pathlib import Path
@@ -167,6 +174,18 @@ def clear_results():
 def purge_temp():
     if TEMP_DIR.exists():
         shutil.rmtree(str(TEMP_DIR), ignore_errors=True)
+
+def _enable_windows_ansi():
+    if not _IS_WINDOWS:
+        return
+    try:
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)
+        mode = ctypes.c_ulong()
+        kernel32.GetConsoleMode(handle, ctypes.byref(mode))
+        kernel32.SetConsoleMode(handle, mode.value | 0x0004)
+    except Exception:
+        pass
 
 URL_PATTERNS = {
     'youtube': [
@@ -516,16 +535,23 @@ class KeyListener:
         self._lock = threading.Lock()
         self._stop_event = threading.Event()
         self._old_term = None
-        try:
-            fd = sys.stdin.fileno()
-            self._old_term = termios.tcgetattr(fd)
-            tty.setcbreak(fd)
-        except Exception:
-            self._old_term = None
+        if not _IS_WINDOWS:
+            try:
+                fd = sys.stdin.fileno()
+                self._old_term = termios.tcgetattr(fd)
+                tty.setcbreak(fd)
+            except Exception:
+                self._old_term = None
         self._thread = threading.Thread(target=self._listen, daemon=True)
         self._thread.start()
 
     def _listen(self):
+        if _IS_WINDOWS:
+            self._listen_windows()
+        else:
+            self._listen_posix()
+
+    def _listen_posix(self):
         import select as sel
         while not self._stop_event.is_set():
             try:
@@ -557,6 +583,28 @@ class KeyListener:
             except Exception:
                 pass
 
+    def _listen_windows(self):
+        while not self._stop_event.is_set():
+            try:
+                if msvcrt.kbhit():
+                    ch = msvcrt.getch()
+                    if ch in (b'\x00', b'\xe0'):
+                        msvcrt.getch()
+                        continue
+                    decoded = ch.decode('utf-8', errors='ignore')
+                    if not decoded:
+                        continue
+                    if decoded == '\x1b':
+                        with self._lock:
+                            self._queue.append('\x1b')
+                    else:
+                        with self._lock:
+                            self._queue.append(decoded.lower())
+                else:
+                    time.sleep(0.02)
+            except Exception:
+                pass
+
     def get_key(self):
         with self._lock:
             return self._queue.popleft() if self._queue else None
@@ -569,7 +617,7 @@ class KeyListener:
 
     def stop(self):
         self._stop_event.set()
-        if self._old_term is not None:
+        if not _IS_WINDOWS and self._old_term is not None:
             try:
                 fd = sys.stdin.fileno()
                 termios.tcsetattr(fd, termios.TCSADRAIN, self._old_term)
@@ -1221,10 +1269,10 @@ def ask_yes_no(prompt, default='n'):
         print_error("Enter y or n")
 
 
-def generate_output_name(media_type, original_name, extension):
+def generate_output_name(media_type, original_name, color_mode, algorithm, extension):
     ts = int(time.time())
     name = sanitize_filename(original_name)
-    return f"ASCIIDEIA_{media_type}_{name}_{ts}.{extension}"
+    return f"ASCIIDEIA_{media_type}_{name}_{color_mode}_{algorithm}_{ts}.{extension}"
 
 
 def run_interactive():
@@ -1327,7 +1375,7 @@ def _do_render(path, is_video, original_name):
         has_audio = has_audio_track(path)
         media_width = meta['width']
 
-        fname = generate_output_name('video', original_name, 'mp4')
+        fname = generate_output_name('video', original_name, color_mode, algorithm, 'mp4')
         out_path = str(RESULTS_DIR / fname)
 
         audio_render_path = None
@@ -1350,7 +1398,7 @@ def _do_render(path, is_video, original_name):
             return
         media_width = img_meta['width']
 
-        fname = generate_output_name('image', original_name, 'png')
+        fname = generate_output_name('image', original_name, color_mode, algorithm, 'png')
         out_path = str(RESULTS_DIR / fname)
 
         ascii_art = image_to_ascii(path, media_width, color_mode, algorithm)
@@ -1506,7 +1554,7 @@ def run_oneline(config):
         if render_folder:
             has_ansi = color_mode in (COLOR_COLORED, COLOR_GRAY)
             if is_video:
-                fname = generate_output_name('video', original_name, 'mp4')
+                fname = generate_output_name('video', original_name, color_mode, algorithm, 'mp4')
                 out_path = os.path.join(render_folder, fname)
                 audio_render_path = None
                 if has_audio:
@@ -1517,14 +1565,13 @@ def run_oneline(config):
                 if result:
                     print_info(f"Saved to {out_path}")
             else:
-                fname = generate_output_name('image', original_name, 'png')
+                fname = generate_output_name('image', original_name, color_mode, algorithm, 'png')
                 out_path = os.path.join(render_folder, fname)
                 ascii_art = image_to_ascii(path, src_w, color_mode, algorithm)
                 if ascii_art:
                     render_png(ascii_art, out_path, has_ansi)
                     print_info(f"Saved to {out_path}")
-
-    if is_video:
+    elif is_video:
         play_ascii_video(path, color_mode, algorithm)
     else:
         play_ascii_image(path, color_mode, algorithm)
@@ -1572,6 +1619,7 @@ def show_help():
 
 def main():
     try:
+        _enable_windows_ansi()
         clear_temp()
 
         if len(sys.argv) > 1:
