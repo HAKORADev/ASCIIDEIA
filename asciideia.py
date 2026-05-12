@@ -103,6 +103,106 @@ C_MAGENTA = "\033[95m"
 C_BLUE    = "\033[94m"
 C_WHITE   = "\033[97m"
 
+_COLOR_DEPTH_24BIT = 3
+_COLOR_DEPTH_256 = 2
+_COLOR_DEPTH_16 = 1
+_COLOR_DEPTH_NONE = 0
+
+def _detect_color_depth():
+    if not sys.stdout.isatty():
+        return _COLOR_DEPTH_24BIT
+    colorterm = os.environ.get('COLORTERM', '').lower()
+    if colorterm in ('truecolor', '24bit'):
+        return _COLOR_DEPTH_24BIT
+    term = os.environ.get('TERM', '').lower()
+    if '256color' in term:
+        return _COLOR_DEPTH_256
+    if not _IS_WINDOWS:
+        try:
+            result = subprocess.run(['tput', 'colors'], capture_output=True, text=True, timeout=2)
+            n = int(result.stdout.strip())
+            if n >= 16777216:
+                return _COLOR_DEPTH_24BIT
+            if n >= 256:
+                return _COLOR_DEPTH_256
+            if n >= 16:
+                return _COLOR_DEPTH_16
+            return _COLOR_DEPTH_NONE
+        except Exception:
+            pass
+    else:
+        try:
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.GetStdHandle(-11)
+            mode = ctypes.c_ulong()
+            kernel32.GetConsoleMode(handle, ctypes.byref(mode))
+            if mode.value & 0x0004:
+                return _COLOR_DEPTH_24BIT
+            return _COLOR_DEPTH_16
+        except Exception:
+            pass
+    if term:
+        return _COLOR_DEPTH_16
+    return _COLOR_DEPTH_NONE
+
+_COLOR_DEPTH = _detect_color_depth()
+
+_256_CUBE = []
+for _r in range(6):
+    for _g in range(6):
+        for _b in range(6):
+            _256_CUBE.append((_r * 51 if _r else 0, _g * 51 if _g else 0, _b * 51 if _b else 0))
+
+_16_PALETTE = [
+    (0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0),
+    (0, 0, 128), (128, 0, 128), (0, 128, 128), (192, 192, 192),
+    (128, 128, 128), (255, 0, 0), (0, 255, 0), (255, 255, 0),
+    (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255),
+]
+
+def _rgb_to_256(r, g, b):
+    best_idx = 16
+    best_dist = float('inf')
+    for i, (cr, cg, cb) in enumerate(_256_CUBE):
+        dr = r - cr
+        dg = g - cg
+        db = b - cb
+        d = dr * dr + dg * dg + db * db
+        if d < best_dist:
+            best_dist = d
+            best_idx = i + 16
+    gray_idx = int(round(0.299 * r + 0.587 * g + 0.114 * b) / 255 * 23) + 232
+    gray_val = 8 + 10 * (gray_idx - 232)
+    dr = r - gray_val
+    dg = g - gray_val
+    db = b - gray_val
+    gray_dist = dr * dr + dg * dg + db * db
+    if gray_dist < best_dist:
+        best_idx = gray_idx
+    return best_idx
+
+def _rgb_to_16(r, g, b):
+    best_idx = 0
+    best_dist = float('inf')
+    for i, (cr, cg, cb) in enumerate(_16_PALETTE):
+        dr = r - cr
+        dg = g - cg
+        db = b - cb
+        d = dr * dr + dg * dg + db * db
+        if d < best_dist:
+            best_dist = d
+            best_idx = i
+    return 30 + best_idx if best_idx < 8 else 90 + (best_idx - 8)
+
+def _color_seq(r, g, b):
+    if _COLOR_DEPTH >= _COLOR_DEPTH_24BIT:
+        return f"\033[38;2;{r};{g};{b}m"
+    if _COLOR_DEPTH >= _COLOR_DEPTH_256:
+        return f"\033[38;5;{_rgb_to_256(r, g, b)}m"
+    if _COLOR_DEPTH >= _COLOR_DEPTH_16:
+        return f"\033[{_rgb_to_16(r, g, b)}m"
+    return ""
+
 def format_time(seconds):
     m = int(seconds) // 60
     s = int(seconds) % 60
@@ -391,7 +491,7 @@ def frame_to_ascii(frame, width, color_mode, algorithm):
                 gv = int(rgb[row, col, 1])
                 bv = int(rgb[row, col, 2])
                 ch = char_map[row, col]
-                parts.append(f"\033[38;2;{rv};{gv};{bv}m{ch}")
+                parts.append(f"{_color_seq(rv, gv, bv)}{ch}")
             parts.append(RESET)
             lines.append(''.join(parts))
         return '\n'.join(lines)
@@ -403,7 +503,7 @@ def frame_to_ascii(frame, width, color_mode, algorithm):
             for col in range(width):
                 g_val = int(gray[row, col])
                 ch = char_map[row, col]
-                parts.append(f"\033[38;2;{g_val};{g_val};{g_val}m{ch}")
+                parts.append(f"{_color_seq(g_val, g_val, g_val)}{ch}")
             parts.append(RESET)
             lines.append(''.join(parts))
         return '\n'.join(lines)
@@ -1017,6 +1117,18 @@ def play_ascii_video(video_path, color_mode=None, algorithm=None):
         sys.stdout.flush()
 
 
+def _256_index_to_rgb(idx):
+    if idx >= 232:
+        v = 8 + 10 * (idx - 232)
+        return (v, v, v)
+    if idx >= 16:
+        idx -= 16
+        b = idx % 6
+        g = (idx // 6) % 6
+        r = idx // 36
+        return (r * 51 if r else 0, g * 51 if g else 0, b * 51 if b else 0)
+    return _16_PALETTE[idx] if idx < 16 else (255, 255, 255)
+
 def parse_ansi_colored_line(line):
     result = []
     i = 0
@@ -1033,6 +1145,21 @@ def parse_ansi_colored_line(line):
                             current_color = (int(parts[2]), int(parts[3]), int(parts[4]))
                         except ValueError:
                             pass
+                elif seq.startswith('38;5;'):
+                    try:
+                        current_color = _256_index_to_rgb(int(seq.split(';')[-1]))
+                    except ValueError:
+                        pass
+                elif seq.strip().isdigit() and int(seq.strip()) >= 30 and int(seq.strip()) <= 97:
+                    code = int(seq.strip())
+                    if code >= 90:
+                        idx = code - 90 + 8
+                    elif code >= 30:
+                        idx = code - 30
+                    else:
+                        idx = 7
+                    if 0 <= idx < 16:
+                        current_color = _16_PALETTE[idx]
                 elif seq == '0':
                     current_color = (255, 255, 255)
                 i = end + 1
