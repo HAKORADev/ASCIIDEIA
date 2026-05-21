@@ -11,7 +11,10 @@
 
 <p align="center">
   <a href="https://github.com/HAKORADev/ASCIIDEIA/releases/latest">
-    <img src="https://img.shields.io/badge/%F0%9F%93%A6%20Release-v0.6.0-green?style=for-the-badge" alt="Latest Release"/>
+    <img src="https://img.shields.io/badge/%F0%9F%93%A6%20Release-v0.6.1-green?style=for-the-badge" alt="Latest Release"/>
+  </a>
+  <a href="https://pypi.org/project/asciideia/">
+    <img src="https://badge.fury.io/py/asciideia.svg?style=for-the-badge" alt="PyPI version"/>
   </a>
   <a href="https://github.com/HAKORADev/ASCIIDEIA/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License"/>
@@ -22,7 +25,7 @@
 
 ---
 
-ASCIIDEIA converts images and videos into ASCII art and plays them directly in your terminal — live, in color, with keyboard controls. When you want a shareable file, render to PNG or MP4 with a single flag. It runs on **Windows, Linux, and macOS**, needs no GPU, and works with local files or YouTube/TikTok URLs.
+ASCIIDEIA converts images and videos into ASCII art and plays them directly in your terminal — live, in color, with keyboard controls. When you want a shareable file, render to PNG or MP4 with a single flag. It runs on **Windows, Linux, and macOS**, needs no GPU, and works with local files or YouTube/TikTok URLs. Also available as a [pip package](https://pypi.org/project/asciideia/) — `pip install asciideia` — for integration into Python projects and automation pipelines.
 
 ---
 
@@ -109,6 +112,12 @@ Paste a YouTube or TikTok URL instead of a local file path. ASCIIDEIA uses yt-dl
 ## Quick Start
 
 ```bash
+# Option 1: pip install (recommended)
+pip install asciideia
+asciideia image "photo.png"
+asciideia video "clip.mp4" algo dots
+
+# Option 2: clone and run
 git clone https://github.com/HAKORADev/ASCIIDEIA.git && cd ASCIIDEIA
 pip install -r requirements.txt
 
