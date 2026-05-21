@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.1] - 2026-05-21
+
+### Added
+
+- **Background Mode Selection** — Choose between Dark (default, leaves black pixels empty for black terminal backgrounds) and Transparent (prints black characters instead of skipping them, so output looks correct on any terminal background color). Available for both images and videos.
+- **Interactive Background Prompt** — After the render mode selection (Modern/Retro), a new prompt asks for background mode: Dark or Transparent.
+- **Oneline Background Flag** — New `bg` flag for oneline mode accepts `dark` or `none` (e.g., `bg none`). Default is `dark`.
+
+---
+
 ## [0.6.0] - 2026-05-13
 
 ### Added

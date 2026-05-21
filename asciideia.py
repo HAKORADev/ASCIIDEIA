@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#v0.7.0
+#v0.6.1
 import cv2
 import os
 import re
